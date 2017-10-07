@@ -5,133 +5,123 @@ from google.cloud import vision
 from google.cloud.vision import types
 
 class Server:
-  # Set up network
-  HOST = ''   # Symbolic name meaning all available interfaces
-  PORT = 39182 # Arbitrary non-privileged port
-  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s.settimeout(60.0)
-  current_id = 0  # Unique ID for each user
 
-  def __init__(self):
-    print('Socket created')
+	def __init__(self):
 
-    #Bind socket to local host and port
-    try:
-        self.s.bind((self.HOST, self.PORT))
-    except socket.error as msg:
-      print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
-      sys.exit()
+		# Declare members
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.sock.settimeout(60.0)
 
-    print('Socket bind complete')
-    self.state = 0
+		self.state = "JOIN" # Others are INROUND, ENDROUND, ENDGAME
+		self.round = 0
 
-    self.s.listen(100)
-    print('Socket now listening')
-    self.start()
-
-  def start(self):
-    clients = []
-    while True:
-      if self.state <= 0:
-        if len(clients) > 0:
-          Thread(None, self.game, current_id, (clients,)).start()
-        self.state = time.time() + 60 * 2
-        clients = []
-
-      while time.time()<self.state:
-        # Wait to accept a connection - blocking call
-        conn, addr = self.s.accept()
-        print('Connected with ' + addr[0] + ':' + str(addr[1]))
-
-        # Start new thread takes 1st argument as a function name to be run, 
-        # second is the tuple of arguments to the function.
-        # group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None
-        cl = Thread(None, self.clientthread, current_id, (conn,)).start()
-        clients.append(cl)
+		self.players = []
+		# a player is a dictionary.
+		# "conn" -> connection (socket)
+		# "name" -> username
+		# "score" -> score
+		# "state" -> state.
 
 
+		self.HOST = ''   # Symbolic name meaning all available interfaces
+		self.PORT = 39182 # Arbitrary non-privileged port
 
-    self.s.close()
+		#Bind socket to local host and port
+		try:
+				# This line causes the "bind fail" to be ignored
+				self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+				self.sock.bind((self.HOST, self.PORT))
+		except socket.error as msg:
+			print('Bind failed')
+			sys.exit()
 
-  # Function for handling connections. This will be used to create threads
-  def clientthread(self, conn, server):
+		# Socket starts to listen (with 100 queued connections lmao)
+		self.sock.listen(100)
+		self.start()
 
-    data = ''
+	def start(self):
+		# Spin up a game thread
+		Thread(None, self.game_thread).start()
+		print("Server is online.")
+		while True:
+			# Await a client
+			conn, addr = self.sock.accept()
+			print('Connected with ' + addr[0] + ':' + str(addr[1]))
 
-    while not self.state == "start":
-      # Receiving from client
-      data += conn.recv(1024)
-      # Data stream ends with newline
-      if data.endswith("\n"):
-        if data[:-1] == "status":
-          left = self.end - time.time()
-          msg = "Begin in " + left + " seconds."
-          conn.send(msg)
-          print("Data Sent")
-          time.sleep(0.5)
-      
-    conn.send("Start!")
-    conn.send("Prompt!")
+			# Start new thread takes 1st argument as a function name to be run, 
+			# second is the tuple of arguments to the function.
+			# group=None, target=None, name=None, args=(), kwargs={}, *, daemon=None
+			Thread(None, self.client_thread, None, (conn,)).start()
 
-    while True:
-      time_out=30.0
-      ready=[[s],[],[], time_out]
-      # Receiving from client
-      if ready:
-        data += conn.recv(1024)
-      # Data stream ends with newline
-      if data.endswith("\n"):
-        # Parse the Json Data
-        #parsed_data = self.parse_data(data[:-1])
-        # Get raw image data
-        img = "data:image/png;base64," + b64encode(data)
-        self.submit(img)
-        # Send off the data
-        conn.send(mapimg)
-        # Close the image
-        #mapimg.close()
-        print("Data Sent")
-        break
+			# The player will close the conn.
 
-    # Close the connection
-    conn.close()
+		self.sock.close()
 
-  def parse_data(self, data):
-    parsed_data = simplejson.loads(data)
-    return parsed_data
+	# Gets a JSON from the client.
+	def get_client_message(self,conn):
+		data = ''
+		while(True):
+			# Receiving from client
+			data += conn.recv(1024).decode(encoding='utf_8')
+			# If I got a newline, then -> parse the JSON.
+			if ("\n" in data):
+				# Do a parse. You can trust me to send good data. I promise.
+				parsed_data = simplejson.loads(data)
+				return parsed_data
 
-  def game(self, cl):
+	# Write a JSON to the client.
+	def write_client_message(self,conn,dictn):
+		conn.send((simplejson.dumps(dictn) + '\n').encode(encoding='utf_8'))
 
 
-  def rate(self, google_image_annotator_client, content, category):
+	def client_thread(self, conn):
+		# Ok, the client has connected to us at this point. 
 
-    # Performace hit? Maybe.
-    image = types.Image(content=content)
+		# If there is a game in progress, we need to put them in a wait loop. 
+		if not self.state == "JOIN":
+			pls_wait_msg = {"status" : "Game is progress. Please Wait..."}
+			self.write_client_message(pls_wait_msg)
+			while not self.state == "JOIN":
+				pass # do sleep instead.
 
-    # TODO Give the user a lot of leeway - try to detect up to 50 things. Right now gets 10.
-    response = google_image_annotator_client.label_detection(image=image)
-    labels = response.label_annotations
+		# Eventually, the game will re-enter the join phase. Notify that client that it's time to join.
+		ok_msg = {"status": "Join Now"}
+		self.write_client_message(conn,ok_msg)
 
-    guessed_labels = []
-    for label in labels:
-      if(label.description == category):
-        return label.score
-    return 0
+		# At this point, the client will send username, and commits to join. You can save the struct.
+		player = {}
+		player["uname"] = self.get_client_message(conn)["uname"]
+		player["conn"] = conn
+		player["score"] = 0
+		player["state"] = "AWAIT_PROMPT"
+		self.players.append(player)
+
+		# Wait for the game to start, which automatically sends the prompt. 
+		while not self.state == "INROUND":
+			pass
+
+		# At this point we are in the first round.
 
 
-  def submit(self, img):
-    client = vision.ImageAnnotatorClient()
-    file = ["barlyke.png","shitty_car.png","good_car.png"]
-    imgs = []
-    for file in files:
-      with io.open("tests/" + file, 'rb') as image_file:
-        imgs.append(image_file.read())
+		# Await transition to 
+		# Close the connection
+		conn.close()
 
-    for image in imgs:
-      print(rate(client,image,"car"))
 
+	def game_thread(self):
+		# Loop will ALWAYS start in Join state
+		while (True):
+			# In join state - If someone joins, wait 5 seconds to start the server. Otherwise idle.
+			while(len(self.players) == 0):
+				time.sleep(1)
+			# Someone joined!
+			sleep(5)
+
+			# Ok, transition to round 1, in game 1, and send out our first prompt.
+			#for k,v in enumerated(players):
+			#	prompt = {""}
+			#	self.write_client_message(players["conn"],
 
 se = Server()
 
-                                                                                   
- 
+
