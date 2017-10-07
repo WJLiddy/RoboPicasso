@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 import socket, sys, time, simplejson, math, os, io, random
 from threading import *
-from base64 import b64encode
+from base64 import b64encode, b64decode
 from google.cloud import vision
 from google.cloud.vision import types
 
@@ -15,6 +16,8 @@ class Server:
     self.state = "JOIN" # Others are INROUND, ENDROUND, ENDGAME
     self.round = 0
     self.prompt = ""
+
+    self.WAITTIME = 10
 
     self.players = []
     # a player is a dictionary.
@@ -98,21 +101,29 @@ class Server:
     player["state"] = "AWAIT_PROMPT"
     self.players.append(player)
 
-    # Wait for the game to start, which automatically sends the prompt. 
-    while not self.state == "INROUND":
-      pass
+    while self.round < 6:
+      # Wait for the game to start, which automatically sends the prompt. 
+      while not self.state == "INROUND":
+        pass
 
-    print("Prompt")
-    prompt_msg = {"prompt" : self.prompt}
-    self.write_client_message(conn, prompt_msg)
+      prompt_msg = {"prompt" : self.prompt}
+      self.write_client_message(conn, prompt_msg)
+      print(self.prompt)
 
-    player["state"] = "PROMPTED"
+      player["state"] = "PROMPTED"
 
 
-    # At this point we are in the first round.
-    while self.state == "INROUND":
-      pass
+      # At this point we are in the first round.
+      while not self.state == "SCORING":
+        time.sleep(.1)
 
+      imgdat = self.get_client_message(conn)
+     
+      pngdat = b64decode(imgdat["picture"])
+      client = vision.ImageAnnotatorClient()
+      score = self.rate(client,pngdat,self.prompt)
+      score_msg = {"prompt" : self.prompt, "round": self.round+1, "score": score, "ranking": 1}
+      self.write_client_message(conn, score_msg)
 
 
     # Await transition to 
@@ -134,10 +145,10 @@ class Server:
 
       # Begin the rounds!
       while self.round < 6:
-
-        while True:
-          pass
-
+        time.sleep(self.WAITTIME+5)
+        self.state = "SCORING"
+        time.sleep(self.WAITTIME)
+        self.round += 1
 
       # Ok, transition to round 1, in game 1, and send out our first prompt.
       #for k,v in enumerated(players):
@@ -154,6 +165,21 @@ class Server:
       rand = random.randint(0, len(labels))
 
       self.prompt = labels[rand]
+
+  def rate(self, google_image_annotator_client, content, category):
+
+    # Performace hit? Maybe.
+    image = types.Image(content=content)
+
+    # TODO Give the user a lot of leeway - try to detect up to 50 things. Right now gets 10.
+    response = google_image_annotator_client.label_detection(image=image)
+    labels = response.label_annotations
+
+    guessed_labels = []
+    for label in labels:
+      if(label.description == category):
+        return int(label.score*100)
+    return 0
 
 se = Server()
 
