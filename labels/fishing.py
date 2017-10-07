@@ -1,6 +1,8 @@
 # Acquire a list of labels recognized by the google images API.
 # Uses the files in the bait folder to get the labels.
 
+# TODO Alternatative: https://stackoverflow.com/questions/38363182/is-there-a-full-list-of-potential-labels-that-googles-vision-api-will-return
+
 # Los import statementatos
 import io, os, csv, random
 from google.cloud import vision
