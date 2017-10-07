@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -41,11 +42,11 @@ public class DrawCanvas : MonoBehaviour
             }
         }
     }
-    void ColorOnDrawCanvas(int paint_index, int x, int y)
+
+    Color indexToColor(int paint_index)
     {
-        
-        Color c = new Color(0,0,0);
-        switch(paint_index)
+        Color c;
+        switch (paint_index)
         {
             case -1: c = new Color(255, 255, 255); break;
             case 0: c = new Color(1, 0, 0); break;
@@ -54,39 +55,81 @@ public class DrawCanvas : MonoBehaviour
             case 3: c = new Color(0, 1, 0); break;
             case 4: c = new Color(0, 0, 1); break;
             case 5: c = new Color(0.5f, 0.5f, 0.5f); break;
-            case 6: c = new Color(0f, 0f, 0f); break;
+            default: c = new Color(0f, 0f, 0f); break;
         }
+        return c;
+    }
+
+    void ColorOnDrawCanvas(int paint_index, int x, int y)
+    {
+        Color c = indexToColor(paint_index);
         canvas_texture.SetPixel(x, y, c);
     }
 
-    void floodfill(int center_x, int center_y)
+    void floodfill(int center_x, int center_y, Color recolor)
     {
-        /**
-        Flood - fill(node, target - color, replacement - color):
- 1.If target - color is equal to replacement-color, return.
- 2.If color of node is not equal to target - color, return.
- 3.Set Q to the empty queue.
- 4.Add node to Q.
- 5.For each element N of Q:
-        6.Set w and e equal to N.
- 7.Move w to the west until the color of the node to the west of w no longer matches target - color.
- 8.Move e to the east until the color of the node to the east of e no longer matches target - color.
- 9.For each node n between w and e:
-        10.Set the color of n to replacement-color.
-11.If the color of the node to the north of n is target - color, add that node to Q.
-12.If the color of the node to the south of n is target - color, add that node to Q.
-13.Continue looping until Q is exhausted.
-14.Return.
-    */
-    }
+        // First step: get all region that is the color selected
+        Color region_color = canvas_texture.GetPixel(center_x, center_y);
 
+        bool[,] is_checked = new bool[400, 400];
+        for (int x = 0; x != 400; x++)
+        {
+            for (int y = 0; y != 400; y++)
+            {
+                is_checked[x, y] = false;
+            }
+        }
+
+
+        Queue<int[]> q = new Queue<int[]>();
+        List<int[]> to_recolor = new List<int[]>();
+
+        var node = new int [2]{ center_x, center_y };
+        q.Enqueue(node);
+
+        while(q.Count > 0)
+        {
+            var denode = q.Dequeue();
+            for (int x = -1; x != 3; x += 2)
+            {
+                for (int y = -1; y != 3; y += 2)
+                {
+                    var next_node = new int[2] { denode[0] + x, denode[1] + y };
+                    if(next_node[0] < 0 || next_node[0] > 399 || next_node[1] < 0 || next_node[1] > 399)
+                    {
+                        continue;
+                    }
+
+                    if(is_checked[next_node[0],next_node[1]])
+                    {
+                        continue;
+                    }
+
+                    //Add it to the explore list.
+                    is_checked[next_node[0], next_node[1]] = true;
+
+                    //This is the same region, and it has not been explored.
+                    if (canvas_texture.GetPixel(next_node[0],next_node[1]) == region_color)
+                    {                 
+                        q.Enqueue(next_node);
+                        to_recolor.Add(next_node);
+                    }
+                }
+            }
+        }
+
+        foreach(int[] c in to_recolor)
+        {
+            canvas_texture.SetPixel(c[0], c[1], recolor);
+        }
+    }
     void plotPoint(int center_x, int center_y)
     {
         ToolsPanel t = GameObject.FindGameObjectWithTag("ToolsPanel").GetComponent<ToolsPanel>();
 
         if (t.erase_mode)
         {
-            int BRUSH_SIZE = 10;
+            int BRUSH_SIZE = 15;
             //draw... 5 by 5?
             for (int x = 0; x != BRUSH_SIZE; x++)
             {
@@ -98,7 +141,7 @@ public class DrawCanvas : MonoBehaviour
         }
         else if (t.floodfill)
         {
-            floodfill(center_x, center_y);
+            floodfill(center_x, center_y, indexToColor(t.brush_selection));
         }
         else
         {
