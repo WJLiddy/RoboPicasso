@@ -90,11 +90,15 @@ public class DrawCanvas : MonoBehaviour
         while(q.Count > 0)
         {
             var denode = q.Dequeue();
-            for (int x = -1; x != 3; x += 2)
+            var delts = new List<int[]>();
+            delts.Add(new int[2] { -1, 0 });
+            delts.Add(new int[2] { 1, 0 });
+            delts.Add(new int[2] { 0, -1 });
+            delts.Add(new int[2] { 0, 1 });
+
+            foreach(var delt in delts)
             {
-                for (int y = -1; y != 3; y += 2)
-                {
-                    var next_node = new int[2] { denode[0] + x, denode[1] + y };
+                var next_node = new int[2] { denode[0] + delt[0], denode[1] + delt[1] };
                     if(next_node[0] < 0 || next_node[0] > 399 || next_node[1] < 0 || next_node[1] > 399)
                     {
                         continue;
@@ -114,9 +118,10 @@ public class DrawCanvas : MonoBehaviour
                         q.Enqueue(next_node);
                         to_recolor.Add(next_node);
                     }
-                }
             }
         }
+
+        Debug.Log(to_recolor.Count);
 
         foreach(int[] c in to_recolor)
         {
