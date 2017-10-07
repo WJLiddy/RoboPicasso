@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 2
   tags:
   - DrawCanvas
+  - ToolsPanel
   layers:
   - Default
   - TransparentFX
