@@ -10,9 +10,9 @@ public class ToolsPanel : MonoBehaviour {
 
     public int brush_selection = 6;
     List<GameObject> paint_buttons = new List<GameObject>();
-
-	// Use this for initialization
-	void Start () {
+    List<GameObject> mode_buttons = new List<GameObject>();
+    // Use this for initialization
+    void Start () {
         // Get origin and find device width in world units.
         var origin = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
         Vector2 topRightCorner = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
@@ -30,6 +30,10 @@ public class ToolsPanel : MonoBehaviour {
         {
             paint_buttons.Add(transform.GetChild(i).GetChild(0).gameObject);
         }
+        for (int i = 7; i != 10; i++)
+        {
+            mode_buttons.Add(transform.GetChild(i).gameObject);
+        }
         brushSelection(6);
     }
 	
@@ -40,6 +44,11 @@ public class ToolsPanel : MonoBehaviour {
 
     public void brushSelection(int i)
     {
+        if(erase_mode)
+        {
+            return;
+        }
+
         brush_selection = i;
         for(int j = 0; j != 7; j++)
         {
@@ -53,5 +62,52 @@ public class ToolsPanel : MonoBehaviour {
                 paint_buttons[j].GetComponentInChildren<Image>().color = new Color(255, 255, 255, 255);
             }
         }
+    }
+
+    public void clearBrush()
+    {
+        for (int j = 0; j != 7; j++)
+        {
+            paint_buttons[j].GetComponentInChildren<Image>().color = new Color(0, 0, 0, 0);
+        }
+    }
+
+    public void bolden(int i )
+    {
+        for(int j = 0; j != 3; j++)
+        {
+            if( i == j)
+            {
+                mode_buttons[j].GetComponentInChildren<Text>().fontStyle = FontStyle.Bold;
+            }
+            else
+            {
+                mode_buttons[j].GetComponentInChildren<Text>().fontStyle = FontStyle.Normal;
+            }
+        }
+    }
+
+    public void PaintMode()
+    {
+        erase_mode = false;
+        floodfill = false;
+        brushSelection(brush_selection);
+        bolden(0);
+    }
+
+    public void EraseMode()
+    {
+        erase_mode = true;
+        floodfill = false;
+        clearBrush();
+        bolden(1);
+    }
+
+    public void FloodFillMode()
+    {
+        erase_mode = false;
+        floodfill = true;
+        brushSelection(brush_selection);
+        bolden(2);
     }
 }
