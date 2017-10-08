@@ -1,0 +1,2 @@
+curl -s  -H "Content-Type: application/json"     https://vision.googleapis.com/v1/images:annotate?key=PUT_KEY_HERE     --data-binary @req.json
+

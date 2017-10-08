@@ -1,0 +1,17 @@
+{
+  "requests": [
+    {
+      "image": {
+        "source": {
+          "imageUri": "https://pbs.twimg.com/profile_images/855105134317010945/acz63BZD_400x400.jpg"
+        }
+      },
+      "features":[
+        {
+          "type":"LABEL_DETECTION",
+          "maxResults":50
+        }
+      ]
+    }
+  ]
+}
