@@ -121,8 +121,7 @@ public class DrawCanvas : MonoBehaviour
                     }
             }
         }
-
-        Debug.Log(to_recolor.Count);
+        
 
         foreach(int[] c in to_recolor)
         {
@@ -233,7 +232,7 @@ public class DrawCanvas : MonoBehaviour
         canvas_texture.Apply();
     }
 
-    string CanvasAsBase64()
+    public string CanvasAsBase64()
     {
         return Convert.ToBase64String(canvas_texture.EncodeToPNG());
     }

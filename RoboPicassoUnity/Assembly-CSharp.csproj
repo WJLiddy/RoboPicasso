@@ -53,6 +53,7 @@
   <ItemGroup>
      <Compile Include="Assets\DrawCanvas.cs" />
      <Compile Include="Assets\GameState.cs" />
+     <Compile Include="Assets\Results.cs" />
      <Compile Include="Assets\Sock.cs" />
      <Compile Include="Assets\Title.cs" />
      <Compile Include="Assets\ToolsPanel.cs" />

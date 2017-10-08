@@ -13,7 +13,7 @@ public class ToolsPanel : MonoBehaviour {
     List<GameObject> paint_buttons = new List<GameObject>();
     List<GameObject> mode_buttons = new List<GameObject>();
 
-    double timer = 30;
+    double timer = 10;
     // Use this for initialization
     void Start () {
 
@@ -54,7 +54,15 @@ public class ToolsPanel : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         timer -= Time.deltaTime;
-        //GameObject.FindGameObjectWithTag("timer");
+        GameObject.FindGameObjectWithTag("timer").GetComponent<Text>().text = ((int)(timer)).ToString();
+        if((int)(timer) == 0)
+        {
+            //send results
+            var j = SimpleJSON.JSON.Parse("{}");
+            j["picture"] = GameObject.FindGameObjectWithTag("DrawCanvas").GetComponent<DrawCanvas>().CanvasAsBase64();
+            GameState.sock.Submit(j.ToString());
+            Application.LoadLevel("rating");
+        }
 
 	}
 
