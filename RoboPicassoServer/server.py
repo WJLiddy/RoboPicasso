@@ -84,7 +84,7 @@ class Server:
       oldround = self.round
       while not self.state == "JOIN":
         if not oldround == self.round:
-          pls_wait_msg = {"status" : "Game is progress. Round " + str(self.round+1) + "/" + self.MAX_ROUNDS}
+          pls_wait_msg = {"status" : "Game is progress. Round " + str(self.round+1) + "/" + str(self.MAX_ROUNDS)}
           write_client_message(pls_wait_msg)
         time.sleep(1)
 
@@ -128,7 +128,7 @@ class Server:
       report = []
       for p in self.players:
         report.append([p["uname"],p["score"]])
-      report.sort(key=lambda x: x[1],True)
+      report.sort(key=lambda x: x[1], reverse=True)
 
       # Get rank
       rank = 0
@@ -167,7 +167,7 @@ class Server:
         self.state = "INROUND"
         time.sleep(self.WAITTIME+3)
         self.state = "SCORING"
-        time.sleep(9)
+        time.sleep(10)
         self.round += 1
 
       break
