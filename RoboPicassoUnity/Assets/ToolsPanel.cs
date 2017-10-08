@@ -13,7 +13,7 @@ public class ToolsPanel : MonoBehaviour {
     List<GameObject> paint_buttons = new List<GameObject>();
     List<GameObject> mode_buttons = new List<GameObject>();
 
-    double timer = 10;
+    double timer = 30;
     // Use this for initialization
     void Start () {
 

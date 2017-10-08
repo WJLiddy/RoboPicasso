@@ -8,30 +8,48 @@ using UnityEngine.UI;
 // TODO add insults
 public class Results : MonoBehaviour {
 
-    double timer = 10;
+    double timer = 9;
+    int round; 
 
-	// Use this for initialization
-	void Start () {
-        //Await results.
+
+    // Use this for initialization
+    void Start () {
+        //Resize center canvas
+        // You -> DrawCanvas.
+        transform.GetChild(1).GetChild(0).GetComponent<Image>().sprite = Sprite.Create(GameState.lastImg, new Rect(0,0,400,400),new Vector2(0.5f,0.5f));
+        // Resize width.
+        var h = transform.GetChild(1).GetChild(0).gameObject.GetComponent<RectTransform>().rect.height;
+        var w = transform.GetChild(1).GetChild(0).gameObject.GetComponent<RectTransform>().rect.width;
+
+        float descale_w_size = h / w;
+
+
+        transform.GetChild(1).GetChild(0).gameObject.GetComponent<RectTransform>().anchorMin = new Vector2((descale_w_size/2), 0.4f);
+        transform.GetChild(1).GetChild(0).gameObject.GetComponent<RectTransform>().anchorMax = new Vector2(1 - (descale_w_size/2), 0.9f);
+
+
+
         SimpleJSON.JSONNode result = null;
-        //while (result == null)
-        Thread.Sleep(8000);
+        while (result == null)
         {
             result = GameState.sock.TryRecv();
             if (result != null)
             {
                 string p = result["prompt"];
-                int score = result["score"];
                 int ranking = result["ranking"];
-                int round = result["round"];
+                round = result["round"];
+                string report = result["report"];
+                int score = result["score"];
 
                 //Get header
-                transform.GetChild(0).gameObject.GetComponentInChildren<Text>().text = "Round " + round + " - " + p;
+                transform.GetChild(0).gameObject.GetComponentInChildren<Text>().text =  (((round != 7) ? ("Round " + round +"/7 " ) : "FINAL ")) + " - " + p;
 
                 //Get Rating
                 transform.GetChild(1).GetChild(1).gameObject.GetComponent<Text>().text = "RoboPicasso's Rating: " + score;
 
-                //TODO comments.
+                //Get report
+                transform.GetChild(2).GetChild(0).gameObject.GetComponentInChildren<Text>().text = report;
+
 
                 //Rank
                 transform.GetChild(3).gameObject.GetComponent<Text>().text = "RANKING: " + Ordinal(ranking);
@@ -75,17 +93,16 @@ public class Results : MonoBehaviour {
     void Update () {
         
 	    timer -= Time.deltaTime;
-        GameObject.FindGameObjectWithTag("Timer").GetComponent<Text>().text = ((int)(timer)).ToString();
-        /**
+        GameObject.FindGameObjectWithTag("Timer").GetComponent<Text>().text = "Next round in: " + ((int)(timer)).ToString();
         if((int)(timer) == 0)
         {
-            //send results
-            var j = SimpleJSON.JSON.Parse("{}");
-            j["picture"] = GameObject.FindGameObjectWithTag("DrawCanvas").GetComponent<DrawCanvas>().CanvasAsBase64();
-            GameState.lastImg = GameObject.FindGameObjectWithTag("DrawCanvas").GetComponent<SpriteRenderer>().sprite.texture;
-            GameState.sock.Submit(j.ToString());
-            Application.LoadLevel("rating");
+            if(round == 7)
+            {
+                GameState.sock.Close();
+                Thread.Sleep(2);
+                Application.LoadLevel("title");
+            }
+            Application.LoadLevel("drawcanvas");
         }
-    */
 	}
 }

@@ -10,7 +10,7 @@ public class Title : MonoBehaviour {
     public string serv_state = "";
 	// Use this for initialization
 	void Start () {
-        GameState.sock = new Sock("25.83.129.56",39182);
+        GameState.sock = new Sock("34.232.110.189", 39182);
     }
 	
 	// Update is called once per frame

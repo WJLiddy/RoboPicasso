@@ -11,10 +11,12 @@ public class DrawCanvas : MonoBehaviour
     Texture2D canvas_texture;
     bool last_point_set = false;
     Vector2 last_point;
+    Color[,] undo_state;
 
     // Use this for initialization
     void Awake()
     {
+        undo_state = new Color[400, 400];
         //Get canvas
         canvas = GetComponent<SpriteRenderer>();
         // Get origin and find device width in world units.
@@ -33,7 +35,28 @@ public class DrawCanvas : MonoBehaviour
         clearCanvas();
     }
 
-    void clearCanvas()
+    public void loadUndo()
+    {
+        for (int x = 0; x != 400; x++)
+        {
+            for (int y = 0; y != 400; y++)
+            {
+                undo_state[x, y] = canvas_texture.GetPixel(x, y);
+            }
+        }
+    }
+
+    public void activateUndo()
+    {
+        for (int x = 0; x != 400; x++)
+        {
+            for (int y = 0; y != 400; y++)
+            {
+                canvas_texture.SetPixel(x, y, undo_state[x, y]);
+            }
+        }
+    }
+    public void clearCanvas()
     {
         for(int x = 0; x != 400; x++)
         {
@@ -208,6 +231,11 @@ public class DrawCanvas : MonoBehaviour
         {
             if (Input.GetMouseButton(0))
             {
+                // ALWAYS save state on first touch.
+                if(!last_point_set)
+                {
+                    loadUndo();
+                }
                 processSingleTouchEvent(new Vector2(Input.mousePosition.x, Input.mousePosition.y));
             } else
             {
@@ -218,6 +246,11 @@ public class DrawCanvas : MonoBehaviour
         {
             if(Input.touchCount >= 1)
             {
+                // ALWAYS save state on first touch.
+                if (!last_point_set)
+                {
+                    loadUndo();
+                }
                 processSingleTouchEvent(Input.GetTouch(0).position);
             } else
             {
