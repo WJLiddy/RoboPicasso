@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import socket, sys, time, simplejson, math, os, io, random, rating, net_tools
+import socket, sys, time, simplejson, math, os, io, random
+from rating import *
+from net_tools import *
+from prompt import *
 from threading import *
 from base64 import b64encode, b64decode
 from google.cloud import vision
@@ -70,12 +73,12 @@ class Server:
     # If there is a game in progress, we need to put them in a wait loop. 
     if not self.state == "JOIN":
       pls_wait_msg = {"status" : "Game is progress. Please Wait..."}
-      write_client_message(pls_wait_msg)
+      write_client_message(conn, pls_wait_msg)
       oldround = self.round
       while not self.state == "JOIN":
         if not oldround == self.round:
           pls_wait_msg = {"status" : "Game is progress. Round " + str(self.round+1) + "/" + str(self.MAX_ROUNDS)}
-          write_client_message(pls_wait_msg)
+          write_client_message(conn, pls_wait_msg)
         time.sleep(1)
 
     # Eventually, the game will re-enter the join phase. Notify that client that it's time to join.
