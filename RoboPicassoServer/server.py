@@ -135,7 +135,7 @@ class Server:
       for p in report:
         score_rep += str(p[0]) + " : " + str(p[1]) + "\n"
          
-      score_msg = {"prompt" : self.prompt, "score" : score, "round": self.round+1, "report": score_rep, "ranking": rank}
+      score_msg = {"prompt" : self.prompt, "score" : score, "round": self.round+1, "report": score_rep, "ranking": rank, "mvpuname": dd, "mvpimage": imggg}
       write_client_message(conn, score_msg)
 
 
@@ -151,6 +151,7 @@ class Server:
       self.state = "JOIN" # Others are INROUND, ENDROUND, ENDGAME
       self.round = 0
       self.prompt = ""
+      self.players = []
 
       # In join state - If someone joins, wait 5 seconds to start the server. Otherwise idle.
       while(len(self.players) < 1):

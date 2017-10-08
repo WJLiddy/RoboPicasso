@@ -27,5 +27,5 @@ def rate(google_image_annotator_client, content, category):
   print(len(labels))
   for label in labels:
     if(label.description == category):
-      return label.score
+      return int(label.score*100)
   return 0
