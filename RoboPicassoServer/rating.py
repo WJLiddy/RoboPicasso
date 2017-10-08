@@ -29,17 +29,3 @@ def rate(google_image_annotator_client, content, category):
     if(label.description == category):
       return label.score
   return 0
-
-
-def test():
-  client = vision.ImageAnnotatorClient()
-  files = ["barlyke.png","shitty_car.png","good_car.png"]
-  imgs = []
-  for file in files:
-    with io.open("tests/" + file, 'rb') as image_file:
-      imgs.append(image_file.read())
-
-  for image in imgs:
-    print(rate(client,image,self.prompt))
-
-test()
