@@ -123,8 +123,26 @@ class Server:
       client = vision.ImageAnnotatorClient()
       score = self.rate(client,pngdat,self.prompt)
       player["score"] += score
-      # Add total
-      score_msg = {"prompt" : self.prompt, "round": self.round+1, "score": score, "ranking": 1, "total": player["score"]}
+
+      # Generate Report player and scores in a tuple
+      report = []
+      for p in self.players:
+        report.append([p["uname"],p["score"]])
+      report.sort(key=lambda x: x[1])
+
+      # Get rank
+      rank = 0
+      for p in report:
+        rank += 1
+        if(p[0] == player["uname"]):
+          break
+
+      # Get score rep
+      score_rep = ""
+      for p in report:
+        score_rep += str(p[0]) + " : " + str(p[1]) + "\n"
+         
+      score_msg = {"prompt" : self.prompt, "score" : score, "round": self.round+1, "report": score_rep, "ranking": rank}
       self.write_client_message(conn, score_msg)
 
 
@@ -180,6 +198,7 @@ class Server:
     labels = response.label_annotations
 
     guessed_labels = []
+    print(len(labels))
     for label in labels:
       if(label.description == category):
         return int(label.score*100)
