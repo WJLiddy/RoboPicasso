@@ -9,4 +9,4 @@ def get_new_prompt():
     labels = lis.split(",")
     rand = random.randint(0, len(labels))
 
-    return prompt = labels[rand]
+    return labels[rand]
