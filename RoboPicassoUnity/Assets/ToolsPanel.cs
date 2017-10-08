@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,8 +12,21 @@ public class ToolsPanel : MonoBehaviour {
     public int brush_selection = 6;
     List<GameObject> paint_buttons = new List<GameObject>();
     List<GameObject> mode_buttons = new List<GameObject>();
+
+    double timer = 30;
     // Use this for initialization
     void Start () {
+
+        Thread.Sleep(1);
+        var prompt = GameState.sock.TryRecv();
+        Debug.Log("Prompt:" + prompt.ToString());
+        if (prompt != null)
+        {
+            string p = prompt["prompt"];
+            bool an = (p[0] == 'a') || (p[0] == 'e') || (p[0] == 'i') || (p[0] == 'o') || (p[0] == 'u');
+            transform.GetChild(10).gameObject.GetComponent<Text>().text = "Draw " + (an ? "an " : "a ") + p;
+        }
+        
         // Get origin and find device width in world units.
         var origin = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
         Vector2 topRightCorner = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
@@ -39,7 +53,9 @@ public class ToolsPanel : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
+        timer -= Time.deltaTime;
+        //GameObject.FindGameObjectWithTag("timer");
+
 	}
 
     public void brushSelection(int i)

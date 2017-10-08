@@ -52,7 +52,9 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\DrawCanvas.cs" />
+     <Compile Include="Assets\GameState.cs" />
      <Compile Include="Assets\Sock.cs" />
+     <Compile Include="Assets\Title.cs" />
      <Compile Include="Assets\ToolsPanel.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>

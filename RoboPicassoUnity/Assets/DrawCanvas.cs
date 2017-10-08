@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -230,5 +231,10 @@ public class DrawCanvas : MonoBehaviour
     {
         processTouchInputs();
         canvas_texture.Apply();
+    }
+
+    string CanvasAsBase64()
+    {
+        return Convert.ToBase64String(canvas_texture.EncodeToPNG());
     }
 }

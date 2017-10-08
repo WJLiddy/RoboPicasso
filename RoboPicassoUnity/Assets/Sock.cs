@@ -24,7 +24,7 @@ public class Sock
             // Create a TCP/IP  socket.  
             sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             sender.Connect(ip, port);
-            sender.ReceiveTimeout = 10; // 100 ms
+            //sender.ReceiveTimeout = 10000; // 10=000 ms
         }
         catch (Exception e)
         {
@@ -36,39 +36,9 @@ public class Sock
     //Send JSON request.
     public void Submit(string json)
     {
+        Debug.Log(json);
         sender.Send(Encoding.ASCII.GetBytes(json + "\n"));
     }
-
-    //Blocking Receive Call.
-    public SimpleJSON.JSONNode Recv()
-    {
-        SimpleJSON.JSONNode n;
-        while (true)
-        {
-            // Data buffer for incoming data.  
-            byte[] bytes = new byte[1024 * 1024];
-            // Receive the response from the remote device.  
-            int bytesRec = 0;
-            try
-            {
-                bytesRec = sender.Receive(bytes);
-            }
-            catch
-            {
-                //Server crashed do something.
-                continue;
-            }
-            buf += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-            n = SimpleJSON.JSON.Parse(buf);
-            if (n != null)
-            {
-                break;
-            }
-        }
-        return n;
-    }
-
-
 
     //Non blocking recieve call
     // Tries to get response from server as a JSON.
@@ -77,22 +47,23 @@ public class Sock
     {
         SimpleJSON.JSONNode n;
         // Data buffer for incoming data.  
-        byte[] bytes = new byte[1024 * 1024];
+
         // Receive the response from the remote device.  
-        int bytesRec = 0;
-        try
-        {
-            bytesRec = sender.Receive(bytes);
-        }
-        catch
-        {
-            //TODO Probably alert that server crashed.
+
+        int to_recv = sender.Available;
+        if (to_recv == 0)
             return null;
-        }
-        buf += Encoding.ASCII.GetString(bytes, 0, bytesRec);
-        n = SimpleJSON.JSON.Parse(buf);
-        if (n != null)
+        byte[] bytes = new byte[to_recv];
+        // Data buffer for incoming data. Optimize?
+
+        // Receive the response from the remote device.  
+        sender.Receive(bytes);
+
+        bytebuf.AddRange(bytes);
+        if (bytebuf[bytebuf.Count - 1] == (byte)'\n')
         {
+            n = SimpleJSON.JSON.Parse(Encoding.UTF8.GetString(bytebuf.ToArray()));
+            bytebuf = new List<byte>();
             return n;
         }
         return null;
