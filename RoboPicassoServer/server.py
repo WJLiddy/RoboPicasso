@@ -17,7 +17,7 @@ class Server:
     self.round = 0
     self.prompt = ""
 
-    self.WAITTIME = 10
+    self.WAITTIME = 30
 
     self.players = []
     # a player is a dictionary.
@@ -122,7 +122,9 @@ class Server:
       pngdat = b64decode(imgdat["picture"])
       client = vision.ImageAnnotatorClient()
       score = self.rate(client,pngdat,self.prompt)
-      score_msg = {"prompt" : self.prompt, "round": self.round+1, "score": score, "ranking": 1}
+      player["score"] += score
+      # Add total
+      score_msg = {"prompt" : self.prompt, "round": self.round+1, "score": score, "ranking": 1, "total": player["score"]}
       self.write_client_message(conn, score_msg)
 
 
@@ -135,20 +137,20 @@ class Server:
     # Loop will ALWAYS start in Join state
     while (True):
       # In join state - If someone joins, wait 5 seconds to start the server. Otherwise idle.
-      while(len(self.players) == 0):
+      while(len(self.players) < 2):
         time.sleep(1)
-
-
-      # Let's get started with a fresh prompt
-      self.get_new_prompt()
-      self.state = "INROUND"
 
       # Begin the rounds!
       while self.round < 6:
-        time.sleep(self.WAITTIME+5)
+        # Let's get started with a fresh prompt
+        self.get_new_prompt()
+        self.state = "INROUND"
+        time.sleep(self.WAITTIME+3)
         self.state = "SCORING"
-        time.sleep(self.WAITTIME)
+        time.sleep(10)
         self.round += 1
+
+      break
 
       # Ok, transition to round 1, in game 1, and send out our first prompt.
       #for k,v in enumerated(players):

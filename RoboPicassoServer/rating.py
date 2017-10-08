@@ -38,6 +38,6 @@ def test():
 			imgs.append(image_file.read())
 
 	for image in imgs:
-		print(rate(client,image,"car"))
+		print(rate(client,image,self.prompt))
 
 test()
