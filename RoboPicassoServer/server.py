@@ -137,8 +137,10 @@ class Server:
     # Loop will ALWAYS start in Join state
     while (True):
       # In join state - If someone joins, wait 5 seconds to start the server. Otherwise idle.
-      while(len(self.players) < 2):
+      while(len(self.players) < 1):
         time.sleep(1)
+
+      time.sleep(10)
 
       # Begin the rounds!
       while self.round < 6:
