@@ -37,6 +37,7 @@ public class DrawCanvas : MonoBehaviour
 
     public void loadUndo()
     {
+        Debug.Log("undo loaded");
         for (int x = 0; x != 400; x++)
         {
             for (int y = 0; y != 400; y++)
@@ -48,6 +49,7 @@ public class DrawCanvas : MonoBehaviour
 
     public void activateUndo()
     {
+        Debug.Log("undo activated");
         for (int x = 0; x != 400; x++)
         {
             for (int y = 0; y != 400; y++)
@@ -55,6 +57,7 @@ public class DrawCanvas : MonoBehaviour
                 canvas_texture.SetPixel(x, y, undo_state[x, y]);
             }
         }
+        canvas_texture.Apply();
     }
     public void clearCanvas()
     {
@@ -231,6 +234,12 @@ public class DrawCanvas : MonoBehaviour
         {
             if (Input.GetMouseButton(0))
             {
+                //Ignore OOB mouse presses.
+                if(Input.mousePosition.y < (Screen.height - Screen.width))
+                {
+                    return;
+                }
+
                 // ALWAYS save state on first touch.
                 if(!last_point_set)
                 {
@@ -246,6 +255,11 @@ public class DrawCanvas : MonoBehaviour
         {
             if(Input.touchCount >= 1)
             {
+                //Ignore OOB mouse presses.
+                if (Input.GetTouch(0).position.y < (Screen.height - Screen.width))
+                {
+                    return;
+                }
                 // ALWAYS save state on first touch.
                 if (!last_point_set)
                 {
