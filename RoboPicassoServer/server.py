@@ -50,16 +50,6 @@ class Server:
     print("Server is online.")
 
     while True:
-      # Is server kill
-      if not game.isAlive():
-        # Reset!
-        self.state = "JOIN" # Others are INROUND, ENDROUND, ENDGAME
-        self.round = 0
-        self.prompt = ""
-
-        # And revive!
-        game = Thread(None, self.game_thread).start()
-
 
       # Await a client
       conn, addr = self.sock.accept()
@@ -154,6 +144,11 @@ class Server:
   def game_thread(self):
     # Loop will ALWAYS start in Join state
     while (True):
+      # Reset!
+      self.state = "JOIN" # Others are INROUND, ENDROUND, ENDGAME
+      self.round = 0
+      self.prompt = ""
+
       # In join state - If someone joins, wait 5 seconds to start the server. Otherwise idle.
       while(len(self.players) < 1):
         time.sleep(1)
@@ -169,8 +164,8 @@ class Server:
         self.state = "SCORING"
         time.sleep(10)
         self.round += 1
-
-      break
+      
+      time.sleep(1)
 
       # Ok, transition to round 1, in game 1, and send out our first prompt.
       #for k,v in enumerated(players):

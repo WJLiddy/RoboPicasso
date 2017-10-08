@@ -23,8 +23,8 @@ def rate(google_image_annotator_client, content, category):
   labels = response.label_annotations
 
   guessed_labels = []
-        print("LABEL LEN")
-        print(len(labels))
+  print("LABEL LEN")
+  print(len(labels))
   for label in labels:
     if(label.description == category):
       return label.score
