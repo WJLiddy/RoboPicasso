@@ -8,31 +8,34 @@ using UnityEngine.UI;
 // TODO add insults
 public class Results : MonoBehaviour {
 
+    double timer = 10;
+
 	// Use this for initialization
 	void Start () {
         //Await results.
-        Thread.Sleep(1);
-        var result = GameState.sock.TryRecv();
-        if (result != null)
+        SimpleJSON.JSONNode result = null;
+        //while (result == null)
+        Thread.Sleep(8000);
         {
-            string p = result["prompt"];
-            int score = result["score"];
-            int ranking = result["ranking"];
-            int round = result["round"];
+            result = GameState.sock.TryRecv();
+            if (result != null)
+            {
+                string p = result["prompt"];
+                int score = result["score"];
+                int ranking = result["ranking"];
+                int round = result["round"];
 
-            //Get header
-            transform.GetChild(0).gameObject.GetComponent<Text>().text = "Round " + round + " - " + p;
+                //Get header
+                transform.GetChild(0).gameObject.GetComponentInChildren<Text>().text = "Round " + round + " - " + p;
 
-            //Get Rating
-            transform.GetChild(1).GetChild(1).gameObject.GetComponent<Text>().text = "Rating: " + score;
+                //Get Rating
+                transform.GetChild(1).GetChild(1).gameObject.GetComponent<Text>().text = "RoboPicasso's Rating: " + score;
 
-            //TODO comments.
+                //TODO comments.
 
-            //Rank
-            transform.GetChild(3).gameObject.GetComponent<Text>().text = "RANKING: " + Ordinal(ranking);
-
-
-
+                //Rank
+                transform.GetChild(3).gameObject.GetComponent<Text>().text = "RANKING: " + Ordinal(ranking);
+            }
         }
     }
 
@@ -68,7 +71,21 @@ public class Results : MonoBehaviour {
     }
 
     // Update is called once per frame
+    // In 10 seconds, move on to next round.
     void Update () {
-		
+        
+	    timer -= Time.deltaTime;
+        GameObject.FindGameObjectWithTag("Timer").GetComponent<Text>().text = ((int)(timer)).ToString();
+        /**
+        if((int)(timer) == 0)
+        {
+            //send results
+            var j = SimpleJSON.JSON.Parse("{}");
+            j["picture"] = GameObject.FindGameObjectWithTag("DrawCanvas").GetComponent<DrawCanvas>().CanvasAsBase64();
+            GameState.lastImg = GameObject.FindGameObjectWithTag("DrawCanvas").GetComponent<SpriteRenderer>().sprite.texture;
+            GameState.sock.Submit(j.ToString());
+            Application.LoadLevel("rating");
+        }
+    */
 	}
 }

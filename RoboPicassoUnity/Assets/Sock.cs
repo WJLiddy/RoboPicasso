@@ -36,7 +36,6 @@ public class Sock
     //Send JSON request.
     public void Submit(string json)
     {
-        Debug.Log(json);
         sender.Send(Encoding.ASCII.GetBytes(json + "\n"));
     }
 

@@ -11,3 +11,6 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/drawcanvas.unity
     guid: 6d07c4eb95f9028479e37920a5956ed5
+  - enabled: 1
+    path: Assets/rating.unity
+    guid: 29694e032b0c27940a4822d3bea5d983
