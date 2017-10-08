@@ -90,6 +90,7 @@ class Server:
     player["uname"] = get_client_message(conn)["uname"]
     player["conn"] = conn
     player["score"] = 0
+    player["total"] = 0
     player["state"] = "AWAIT_PROMPT"
     self.players.append(player)
 
@@ -100,7 +101,6 @@ class Server:
 
       prompt_msg = {"prompt" : self.prompt}
       write_client_message(conn, prompt_msg)
-      print(self.prompt)
 
       player["state"] = "PROMPTED"
 
@@ -114,13 +114,27 @@ class Server:
       pngdat = b64decode(imgdat["picture"])
       client = vision.ImageAnnotatorClient()
       score = rate(client,pngdat,self.prompt)
-      player["score"] += score
+      player["score"] = score
+      player["previm"] = imgdat["picture"]
+      player["total"] += score
       time.sleep(1)
 
       # Generate Report player and scores in a tuple
+      # and find MVP of round
       report = []
+      mvp = ''
       for p in self.players:
-        report.append([p["uname"],p["score"]])
+        report.append([p["uname"],p["total"]])
+
+        if p["score"]>maxp:
+          mvp = p
+          maxp = p["score"]
+
+        elif p["score"]==maxp and int(round(random.random())):
+          mvp = p
+          maxp = p["score"]
+
+
       report.sort(key=lambda x: x[1], reverse=True)
 
       # Get rank
@@ -135,10 +149,11 @@ class Server:
       for p in report:
         score_rep += str(p[0]) + " : " + str(p[1]) + "\n"
          
-      score_msg = {"prompt" : self.prompt, "score" : score, "round": self.round+1, "report": score_rep, "ranking": rank, "mvpuname": dd, "mvpimage": imggg}
+      score_msg = {"prompt" : self.prompt, "total" : score, "round": self.round+1, "report": score_rep, "ranking": rank, "mvpuname": mvp["uname"], "mvpimage": mvp["previm"]}
       write_client_message(conn, score_msg)
 
 
+    time.sleep(11)
     # Await transition to 
     # Close the connection
     conn.close()
@@ -161,6 +176,7 @@ class Server:
 
       # Begin the rounds!
       while self.round < self.MAX_ROUNDS:
+        print(self.prompt)
         # Let's get started with a fresh prompt
         self.prompt = get_new_prompt()
         self.state = "INROUND"
