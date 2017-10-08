@@ -17,14 +17,17 @@ public class ToolsPanel : MonoBehaviour {
     // Use this for initialization
     void Start () {
 
-        Thread.Sleep(1);
-        var prompt = GameState.sock.TryRecv();
-        Debug.Log("Prompt:" + prompt.ToString());
-        if (prompt != null)
+        SimpleJSON.JSONNode prompt = null;
+        while (prompt == null)
         {
-            string p = prompt["prompt"];
-            bool an = (p[0] == 'a') || (p[0] == 'e') || (p[0] == 'i') || (p[0] == 'o') || (p[0] == 'u');
-            transform.GetChild(10).gameObject.GetComponent<Text>().text = "Draw " + (an ? "an " : "a ") + p;
+            prompt = GameState.sock.TryRecv();
+            if (prompt != null)
+            {
+                string p = prompt["prompt"];
+                bool an = (p[0] == 'a') || (p[0] == 'e') || (p[0] == 'i') || (p[0] == 'o') || (p[0] == 'u');
+                transform.GetChild(10).gameObject.GetComponent<Text>().text = "Draw " + (an ? "an " : "a ") + p;
+                break;
+            }
         }
         
         // Get origin and find device width in world units.
@@ -32,10 +35,7 @@ public class ToolsPanel : MonoBehaviour {
         Vector2 topRightCorner = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
         var deviceH = topRightCorner.y - origin.y;
         var deviceW = topRightCorner.x - origin.x;
-        Debug.Log(deviceW);
-        Debug.Log(deviceH);
         var pct = (deviceH - deviceW) / deviceH;
-        Debug.Log(pct);
         //Resize this based on space.
         GetComponent<RectTransform>().anchorMax = new Vector2(1, pct);
 
@@ -54,12 +54,13 @@ public class ToolsPanel : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         timer -= Time.deltaTime;
-        GameObject.FindGameObjectWithTag("timer").GetComponent<Text>().text = ((int)(timer)).ToString();
+        GameObject.FindGameObjectWithTag("Timer").GetComponent<Text>().text = ((int)(timer)).ToString();
         if((int)(timer) == 0)
         {
             //send results
             var j = SimpleJSON.JSON.Parse("{}");
             j["picture"] = GameObject.FindGameObjectWithTag("DrawCanvas").GetComponent<DrawCanvas>().CanvasAsBase64();
+            GameState.lastImg = GameObject.FindGameObjectWithTag("DrawCanvas").GetComponent<SpriteRenderer>().sprite.texture;
             GameState.sock.Submit(j.ToString());
             Application.LoadLevel("rating");
         }
